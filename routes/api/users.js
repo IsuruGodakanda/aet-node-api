@@ -4,6 +4,7 @@ const gravatar = require('gravatar');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('config');
+const auth = require('../../middleware/auth');
 const { check, validationResult } = require('express-validator/check');
 
 const User = require('../../models/User');
@@ -86,5 +87,23 @@ router.post(
     }
   }
 );
+
+// @route    GET api/users
+// @desc     Get all users
+// @access   Private
+router.get('/', auth, async (req, res) => {
+  try {
+    let offset = parseInt(req.query.offset)
+    let limit = parseInt(req.query.limit)
+
+    const users = await User.find({}, {id: 1, name: 1, email: 1, role: 1}).skip(offset*limit).limit(limit);
+
+    const userCount = await User.count();
+    res.json({"results": users, "totalCount": userCount});
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
 
 module.exports = router;
