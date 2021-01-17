@@ -95,10 +95,11 @@ router.get('/', auth, async (req, res) => {
   try {
     let offset = parseInt(req.query.offset)
     let limit = parseInt(req.query.limit)
+    let search = req.query.search_term || ''
 
-    const users = await User.find({}, {id: 1, name: 1, email: 1, role: 1}).skip(offset*limit).limit(limit);
+    const users = await User.find({name: { $regex: `^${search}.*`  }}, {id: 1, name: 1, email: 1, role: 1}).skip(offset*limit).limit(limit);
 
-    const userCount = await User.count();
+    const userCount = await User.find({name: { $regex: `^${search}.*`  }}).countDocuments();
     res.json({"results": users, "totalCount": userCount});
   } catch (err) {
     console.error(err.message);
