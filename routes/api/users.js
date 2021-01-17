@@ -93,8 +93,8 @@ router.post(
 // @access   Private
 router.get('/', auth, async (req, res) => {
   try {
-    let offset = parseInt(req.query.offset)
-    let limit = parseInt(req.query.limit)
+    let offset = parseInt(req.query.offset) || 0
+    let limit = parseInt(req.query.limit) || 5
     let search = req.query.search_term || ''
 
     const users = await User.find({name: { $regex: `^${search}.*`  }}, {id: 1, name: 1, email: 1, role: 1}).skip(offset*limit).limit(limit);
