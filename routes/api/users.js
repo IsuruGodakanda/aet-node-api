@@ -22,18 +22,19 @@ router.post(
     check('role', 'Role is required')
       .not()
       .isEmpty(),
-    check(
-      'password',
-      'Please enter a password with 6 or more characters'
-    ).isLength({ min: 6 })
+    // check(
+    //   'password',
+    //   'Please enter a password with 6 or more characters'
+    // ).isLength({ min: 6 })
   ],
+  auth,
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, role, password } = req.body;
+    const { name, email, role, password = 'Asdf123' } = req.body;
 
     try {
       let user = await User.findOne({ email });
