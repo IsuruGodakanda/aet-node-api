@@ -97,8 +97,10 @@ router.get('/', auth, async (req, res) => {
     let offset = parseInt(req.query.offset) || 0
     let limit = parseInt(req.query.limit) || 5
     let search = req.query.search_term || ''
+    let sortby = req.query.sortby || ''
+    let sortdirection = req.query.sortdirection === "ASC" ? 1 : -1
 
-    const users = await User.find({name: { $regex: new RegExp("^" + search.toLowerCase(), "i")  }}, {id: 1, name: 1, email: 1, role: 1}).skip(offset*limit).limit(limit);
+    const users = await User.find({name: { $regex: new RegExp("^" + search.toLowerCase(), "i")  }}, {id: 1, name: 1, email: 1, role: 1}).skip(offset*limit).limit(limit).sort(req.query.sortdirection ? {[sortby]: sortdirection} : {});
 
     const userCount = await User.find({name: { $regex: new RegExp("^" + search.toLowerCase(), "i")  }}).countDocuments();
     res.json({"results": users, "totalCount": userCount});
