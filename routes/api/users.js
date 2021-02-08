@@ -100,7 +100,7 @@ router.get('/', auth, async (req, res) => {
     let sortby = req.query.sortby || ''
     let sortdirection = req.query.sortdirection === "ASC" ? 1 : -1
 
-    const users = await User.find({name: { $regex: new RegExp("^" + search.toLowerCase(), "i")  }}, {id: 1, name: 1, email: 1, role: 1}).skip(offset*limit).limit(limit).sort(req.query.sortdirection ? {[sortby]: sortdirection, $natural:-1} : {$natural:-1});
+    const users = await User.find({name: { $regex: new RegExp("^" + search.toLowerCase(), "i")  }}, {id: 1, name: 1, email: 1, role: 1}).skip(offset*limit).limit(limit).sort(req.query.sortdirection ? {[sortby]: sortdirection} : {$natural:-1});
 
     const userCount = await User.find({name: { $regex: new RegExp("^" + search.toLowerCase(), "i")  }}).countDocuments();
     res.json({"results": users, "totalCount": userCount});
