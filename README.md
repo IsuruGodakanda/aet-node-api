@@ -1,4 +1,4 @@
-# DevConnector 2.0
+# aet-node-api
 
 > Social network for developers
 
