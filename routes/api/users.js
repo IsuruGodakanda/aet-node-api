@@ -3,11 +3,15 @@ const router = express.Router();
 const gravatar = require('gravatar');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const sgMail = require('@sendgrid/mail');
 const config = require('config');
 const auth = require('../../middleware/auth');
 const { check, validationResult } = require('express-validator/check');
 
 const User = require('../../models/User');
+const SG_API_KEY = config.get('sgApiKey');
+
+sgMail.setApiKey(SG_API_KEY);
 
 // @route    POST api/users
 // @desc     Register user
@@ -64,6 +68,22 @@ router.post(
       user.password = await bcrypt.hash(password, salt);
 
       await user.save();
+
+      const emailObject = {
+        to: user.email,
+        from: {
+          name: 'Greatcode',
+          email:'isurugreatcode@gmail.com'
+        },
+        subject: 'Verification Email',
+        text: 'Please verify your acount',
+        html: `<div style="text-align: center;"><p style="color:red;">Hi ${user.name}</p><a href="http://localhost:3000" alt="Verfication Link"><h1>Please verify your acount</h1></a></div>`
+      }
+
+      await sgMail
+        .send(emailObject)
+        .then((res) => console.log("Email sent!"))
+        .catch((err) => console.log(err));
 
       const payload = {
         id: user.id,
