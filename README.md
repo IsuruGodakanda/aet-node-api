@@ -35,7 +35,7 @@ yarn install
 ### Author
 
 Isuru Godakanda
-[Isuru Gretcode Media](https://isurugreatcode.wordpress.com/)
+[Isuru Greatcode](https://isurugreatcode.wordpress.com/)
 
 ### Version
 
