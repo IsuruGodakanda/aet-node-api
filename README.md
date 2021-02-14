@@ -2,7 +2,7 @@
 
 > Social network for developers
 
-This is a MERN stack application from the "MERN Stack Front To Back" course on [Udemy](https://www.udemy.com/mern-stack-front-to-back/?couponCode=TRAVERSYMEDIA). It is a small social network app that includes authentication, profiles and forum posts.
+This is a Node express backend app with teilio sendgrid service.
 
 ## Quick Start
 
@@ -27,30 +27,19 @@ This is a MERN stack application from the "MERN Stack Front To Back" course on [
 
 ```bash
 # Install server dependencies
-npm install
-
-# Install client dependencies
-cd client
-npm install
-
-# Run both Express & React from root
-npm run dev
-
-# Build for production
-cd client
-npm run build
+yarn install
 ```
 
 ## App Info
 
 ### Author
 
-Brad Traversy
-[Traversy Media](http://www.traversymedia.com)
+Isuru Godakanda
+[Isuru Gretcode Media](https://isurugreatcode.wordpress.com/)
 
 ### Version
 
-2.0.0
+1.0.0
 
 ### License
 
