@@ -3,7 +3,6 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const gravatar = require('gravatar');
 const sgMail = require('@sendgrid/mail');
-const auth = require('../../middleware/auth');
 const jwt = require('jsonwebtoken');
 const config = require('config');
 const { check, validationResult } = require('express-validator/check');
@@ -83,11 +82,11 @@ router.get(
       await jwt.verify(otpToken, config.get('jwtSecret'), async (error, decoded)=>{
         if(error){
           if (error.message === "jwt expired") {
-            res.status(401).json({ msg: 'Token has expired' });
+            res.status(401).json({errors: [{ msg: 'Token has expired' }]});
           } else if (error.message === "jwt must be provided") {
-            res.status(400).json({ msg: 'Token must be provided' });
+            res.status(400).json({errors: [{ msg: 'Token must be provided' }]});
           } else {
-            res.status(400).json({ msg: 'Token is not valid' });
+            res.status(400).json({errors: [{ msg: 'Token is not valid' }]});
           }
         } else {
           const email = decoded.email;
@@ -104,11 +103,9 @@ router.get(
               .json({ errors: [{ msg: 'The token has already used' }] });
           }
 
-          user.passwordOTP.isUsed = true;
-
-          await user.save();
-
-          res.status(200).send(email);
+          return res
+              .status(200)
+              .json({ msg: 'Email verified' });
         }
       });
 
@@ -145,11 +142,11 @@ router.post(
       await jwt.verify(otpToken, config.get('jwtSecret'), async (error, decoded)=>{
         if(error){
           if (error.message === "jwt expired") {
-            res.status(401).json({ msg: 'Token has expired' });
+            res.status(401).json({errors: [{ msg: 'Token has expired' }]});
           } else if (error.message === "jwt must be provided") {
-            res.status(400).json({ msg: 'Token must be provided' });
+            res.status(400).json({errors: [{ msg: 'Token must be provided' }]});
           } else {
-            res.status(400).json({ msg: 'Token is not valid' });
+            res.status(400).json({errors: [{ msg: 'Token is not valid' }]});
           }
         } else {
           const email = decoded.email;
@@ -169,6 +166,7 @@ router.post(
           const salt = await bcrypt.genSalt(10);
 
           user.password = await bcrypt.hash(password, salt);
+          user.passwordOTP.isUsed = true;
 
           await user.save();
 
@@ -279,119 +277,11 @@ router.post(
             .then(() => {
               return res
                 .status(200)
-                .json({ errors: [{ msg: "Email has re-sent!" }] });
+                .json({ msg: "Email has re-sent!" });
             })
             .catch((err) => console.log(err));
         }
       );
-    } catch (err) {
-      console.error(err.message);
-      res.status(500).send('Server error');
-    }
-  }
-);
-
-// @route    POST api/auth/register
-// @desc     Register user
-// @access   Public
-router.post(
-  '/register',
-  [
-    check('email', 'Please include a valid email').isEmail(),
-    check('role', 'Role is required')
-      .not()
-      .isEmpty(),
-  ],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { email, role } = req.body;
-
-    try {
-      let user = await User.findOne({ email });
-
-      if (user) {
-        return res
-          .status(400)
-          .json({ errors: [{ msg: 'User already exists' }] });
-      }
-
-      const avatar = gravatar.url(email, {
-        s: '200',
-        r: 'pg',
-        d: 'mm'
-      });
-
-      const payload = {
-        email
-      };
-
-      jwt.sign(
-        payload,
-        config.get('jwtSecret'),
-        { expiresIn: 300 },
-        async (err, token) => {
-          if (err) throw err;
-          let passwordOTP = {
-            otp: token,
-            isUsed: false
-          }
-
-          newUser = new User({
-            email,
-            role,
-            avatar,
-            passwordOTP
-          });
-    
-          newUser.save();
-
-          const emailObject = {
-            to: email,
-            from: {
-              name: 'Greatcode',
-              email:'isurugreatcode@gmail.com'
-            },
-            subject: 'Verification Email',
-            text: 'Please verify your acount',
-            html: `<div style="padding: 0; margin: 0; font-family: 'Open Sans', sans-serif;">
-                    <div style="max-width:600px; margin:0 auto">
-                        <div style="background-color:#e9eef1;padding:30px">
-                            <div style="margin:40px 0;text-align:center">
-                                <h1>Greatcode</h1>
-                            </div>
-                            <div style="text-align:center">
-                                <p style="font-size:44px;font-weight:700;letter-spacing:0.51px;color:#212121;line-height:44px;margin-bottom:10px">
-                                    Welcome to Greatcode!
-                                </p>
-                                <p style="font-size:22px;font-weight:500;letter-spacing:0.41px;color:#212121;margin-bottom:40px">
-                                    Please confirm your email address
-                                </p>
-                            </div>
-                            <div style="text-align:center;margin:15px 0 20px 0;font-size:22px;letter-spacing:0.41px">
-                                <a href="http://localhost:3000/createpassword?code=${passwordOTP.otp}" target="_blank" style="color:#2696d9;text-decoration:underline">
-                                    Create Password
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>`
-          }
-
-          await sgMail
-            .send(emailObject)
-            .then(() => {
-              return res
-                .status(200)
-                .json({ errors: [{ msg: "Email has sent!" }] });
-            })
-            .catch((err) => console.log(err));
-        }
-      );
-
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Server error');

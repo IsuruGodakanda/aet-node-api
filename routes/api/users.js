@@ -109,7 +109,7 @@ router.post(
             .then(() => {
               return res
                 .status(200)
-                .json({ errors: [{ msg: "Email has sent!" }] });
+                .json({ msg: "Email has sent" });
             })
             .catch((err) => console.log(err));
         }
@@ -151,13 +151,13 @@ router.get('/:user_id', auth, async (req, res) => {
       _id: req.params.user_id
     }, {email: 1, role: 1});
 
-    if (!user) return res.status(400).json({ msg: 'User not found' });
+    if (!user) return res.status(400).json({errors: [{ msg: 'User not found' }]});
 
     res.json(user);
   } catch (err) {
     console.error(err.message);
     if (err.kind == 'ObjectId') {
-      return res.status(400).json({ msg: 'User not found' });
+      return res.status(400).json({errors: [{ msg: 'User not found' }]});
     }
     res.status(500).send('Server Error');
   }
@@ -185,7 +185,7 @@ router.put(
         _id: req.params.user_id
       }, {email: 1, role: 1});
 
-      if (!user) return res.status(400).json({ msg: 'User not found' });
+      if (!user) return res.status(400).json({errors: [{ msg: 'User not found' }]});
 
       await User.findOneAndUpdate(
         { _id : req.params.user_id },
@@ -197,7 +197,7 @@ router.put(
     } catch (err) {
       console.error(err.message);
       if (err.kind == 'ObjectId') {
-        return res.status(400).json({ msg: 'User not found' });
+        return res.status(400).json({errors: [{ msg: 'User not found' }]});
       }
       res.status(500).send('Server Error');
     }
@@ -212,7 +212,7 @@ router.delete('/:user_id', auth, async (req, res) => {
       _id: req.params.user_id
     }, {email: 1, role: 1});
 
-    if (!user) return res.status(400).json({ msg: 'User not found' });
+    if (!user) return res.status(400).json({errors: [{ msg: 'User not found' }]});
 
     await User.findOneAndRemove({ _id: req.params.user_id });
 

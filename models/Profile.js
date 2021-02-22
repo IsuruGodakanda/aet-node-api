@@ -23,10 +23,6 @@ const ProfileSchema = new mongoose.Schema({
     required: true,
     default: "BUDDHISM" | "HINDUISM" | "ISLAM" | "CHRISTIANITY"
   },
-  religion: {
-    type: String,
-    required: true,
-  },
   dateOfBirth: {
     type: Date,
     required: true,
@@ -45,7 +41,7 @@ const ProfileSchema = new mongoose.Schema({
     required: true,
     ref: 'project'
   },
-  Technologies: {
+  technologies: {
     type: [String],
     required: true
   },
