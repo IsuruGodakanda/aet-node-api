@@ -19,17 +19,10 @@ sgMail.setApiKey(SG_API_KEY);
 router.post(
   '/',
   [
-    check('name', 'Name is required')
-      .not()
-      .isEmpty(),
     check('email', 'Please include a valid email').isEmail(),
     check('role', 'Role is required')
       .not()
       .isEmpty(),
-    // check(
-    //   'password',
-    //   'Please enter a password with 6 or more characters'
-    // ).isLength({ min: 6 })
   ],
   auth,
   async (req, res) => {
@@ -38,7 +31,7 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, role, password = 'Asdf123' } = req.body;
+    const { email, role } = req.body;
 
     try {
       let user = await User.findOne({ email });
@@ -55,51 +48,70 @@ router.post(
         d: 'mm'
       });
 
-      user = new User({
-        name,
-        email,
-        role,
-        avatar,
-        password
-      });
-
-      const salt = await bcrypt.genSalt(10);
-
-      user.password = await bcrypt.hash(password, salt);
-
-      await user.save();
-
-      const emailObject = {
-        to: user.email,
-        from: {
-          name: 'Greatcode',
-          email:'isurugreatcode@gmail.com'
-        },
-        subject: 'Verification Email',
-        text: 'Please verify your acount',
-        html: `<div style="text-align: center;"><p style="color:red;">Hi ${user.name}</p><a href="http://localhost:3000" alt="Verfication Link"><h1>Please verify your acount</h1></a></div>`
-      }
-
-      await sgMail
-        .send(emailObject)
-        .then((res) => console.log("Email sent!"))
-        .catch((err) => console.log(err));
-
       const payload = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar
+        email
       };
 
       jwt.sign(
         payload,
         config.get('jwtSecret'),
-        { expiresIn: 360000 },
-        (err, token) => {
+        { expiresIn: 300 },
+        async (err, token) => {
           if (err) throw err;
-          res.json({ token });
+          let passwordOTP = {
+            otp: token,
+            isUsed: false
+          }
+
+          newUser = new User({
+            email,
+            role,
+            avatar,
+            passwordOTP
+          });
+    
+          newUser.save();
+
+          const emailObject = {
+            to: email,
+            from: {
+              name: 'Greatcode',
+              email:'isurugreatcode@gmail.com'
+            },
+            subject: 'Verification Email',
+            text: 'Please verify your acount',
+            html: `<div style="padding: 0; margin: 0; font-family: 'Open Sans', sans-serif;">
+                    <div style="max-width:600px; margin:0 auto">
+                        <div style="background-color:#e9eef1;padding:30px">
+                            <div style="margin:40px 0;text-align:center">
+                                <h1>Greatcode</h1>
+                            </div>
+                            <div style="text-align:center">
+                                <p style="font-size:44px;font-weight:700;letter-spacing:0.51px;color:#212121;line-height:44px;margin-bottom:10px">
+                                    Welcome to Greatcode!
+                                </p>
+                                <p style="font-size:22px;font-weight:500;letter-spacing:0.41px;color:#212121;margin-bottom:40px">
+                                    Please confirm your email address
+                                </p>
+                            </div>
+                            <div style="text-align:center;margin:15px 0 20px 0;font-size:22px;letter-spacing:0.41px">
+                                <a href="http://localhost:3000/createpassword?code=${passwordOTP.otp}" target="_blank" style="color:#2696d9;text-decoration:underline">
+                                    Create Password
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>`
+          }
+
+          await sgMail
+            .send(emailObject)
+            .then(() => {
+              return res
+                .status(200)
+                .json({ errors: [{ msg: "Email has sent!" }] });
+            })
+            .catch((err) => console.log(err));
         }
       );
     } catch (err) {
@@ -120,9 +132,9 @@ router.get('/', auth, async (req, res) => {
     let sortby = req.query.sortby || ''
     let sortdirection = req.query.sortdirection === "ASC" ? 1 : -1
 
-    const users = await User.find({name: { $regex: new RegExp("^" + search.toLowerCase(), "i")  }}, {id: 1, name: 1, email: 1, role: 1}).skip(offset*limit).limit(limit).sort(req.query.sortdirection ? {[sortby]: sortdirection} : {$natural:-1});
+    const users = await User.find({email: { $regex: new RegExp("^" + search.toLowerCase(), "i")  }}, {id: 1, email: 1, role: 1}).skip(offset*limit).limit(limit).sort(req.query.sortdirection ? {[sortby]: sortdirection} : {$natural:-1});
 
-    const userCount = await User.find({name: { $regex: new RegExp("^" + search.toLowerCase(), "i")  }}).countDocuments();
+    const userCount = await User.find({email: { $regex: new RegExp("^" + search.toLowerCase(), "i")  }}).countDocuments();
     res.json({"results": users, "totalCount": userCount});
   } catch (err) {
     console.error(err.message);
@@ -137,7 +149,7 @@ router.get('/:user_id', auth, async (req, res) => {
   try {
     const user = await User.findOne({
       _id: req.params.user_id
-    }, {name: 1, email: 1, role: 1});
+    }, {email: 1, role: 1});
 
     if (!user) return res.status(400).json({ msg: 'User not found' });
 
@@ -157,9 +169,6 @@ router.get('/:user_id', auth, async (req, res) => {
 router.put(
   '/:user_id',
   [
-    check('name', 'Name is required')
-      .not()
-      .isEmpty(),
     check('email', 'Please include a valid email').isEmail(),
     check('role', 'Role is required')
       .not()
@@ -170,17 +179,17 @@ router.put(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, role } = req.body;
+    const { email, role } = req.body;
     try {
       const user = await User.findOne({
         _id: req.params.user_id
-      }, {name: 1, email: 1, role: 1});
+      }, {email: 1, role: 1});
 
       if (!user) return res.status(400).json({ msg: 'User not found' });
 
       await User.findOneAndUpdate(
         { _id : req.params.user_id },
-        { $set: { name, email, role} },
+        { $set: { email, role} },
         { upsert:true, new : true }
       );
   
@@ -201,7 +210,7 @@ router.delete('/:user_id', auth, async (req, res) => {
   try {
     const user = await User.findOne({
       _id: req.params.user_id
-    }, {name: 1, email: 1, role: 1});
+    }, {email: 1, role: 1});
 
     if (!user) return res.status(400).json({ msg: 'User not found' });
 

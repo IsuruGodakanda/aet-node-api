@@ -1,10 +1,6 @@
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true
-  },
   email: {
     type: String,
     required: true,
@@ -13,15 +9,30 @@ const UserSchema = new mongoose.Schema({
   role: {
     type: String,
     required: true,
+    default: 'ADMIN' | 'MANAGER' | 'WORKER'
   },
   password: {
-    type: String,
-    required: true
+    type: String
+  },
+  passwordOTP: {
+    otp: {
+      type: String,
+      required: true,
+    },
+    isUsed: {
+      type: Boolean,
+      required: true,
+      default: false
+    }
   },
   avatar: {
     type: String
   },
-  date: {
+  createdDate: {
+    type: Date,
+    default: Date.now
+  },
+  updatedDate: {
     type: Date,
     default: Date.now
   }

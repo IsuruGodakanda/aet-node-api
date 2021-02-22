@@ -13,7 +13,7 @@ This is a Node express backend app with teilio sendgrid service.
 
 # add uri of your mongodb connection for example
 
- "mongoURI": "mongodb://localhost/dev-social",
+ "mongoURI": "mongodb://localhost/{DB_NAME}",
 
 # add JWT secret for example
 
