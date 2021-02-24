@@ -38,7 +38,7 @@ exports.uploadFile = (req, res, next) => {
                 }
             
                 if (!data[row]) data[row] = {};
-                data[row][headers[col]] = value;
+                data[row][headers[col].toLowerCase()] = value;
             }
             //drop those first two rows which are empty
             data.shift();
