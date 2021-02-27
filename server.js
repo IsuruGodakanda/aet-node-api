@@ -23,6 +23,7 @@ app.use(express.json({ extended: false }));
 app.use('/api/users', require('./routes/api/users'));
 app.use('/api/auth', require('./routes/api/auth'));
 app.use('/api/profile', require('./routes/api/profile'));
+app.use('/api/leave', require('./routes/api/leave'));
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
